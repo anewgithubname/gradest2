@@ -1,9 +1,3 @@
-# Supplementary Materials for AISTATS2024 Reviewers 
-
-## [Appendix](appendix.pdf)
-
-[Appendix](appendix.pdf) includes all the proofs, additional experimental settings, and explanations that are too long for the main text.
-
 ## SVGD vs. NSVGD 
 open MATLAB, run ```demo_SVGD_NSVGD```
 
