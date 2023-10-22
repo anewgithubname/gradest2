@@ -1,3 +1,5 @@
+# Experiments README
+
 ## SVGD vs. NSVGD 
 open MATLAB, run ```demo_SVGD_NSVGD```
 
