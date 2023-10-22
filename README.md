@@ -33,11 +33,17 @@ python3 demo_estimation_error_over_n.py
 python3 demo_MNIST.py
 ```
 ### Forward KL WGF
-<video width="480" height="480" controls>
+
+[![Watch the video](https://img.youtube.com/vi/HZcvUykrpbc/hqdefault.jpg)](https://youtube.com/shorts/HZcvUykrpbc)
+
+<!-- <video width="480" height="480" controls>
   <source src="figs/fKL_MNIST.mp4" type="video/mp4">
-</video>
+</video> -->
 
 ### Backward KL WGF
-<video width="480" height="480" controls>
+
+[![Watch the video](https://img.youtube.com/vi/AgN6dsDecCM/hqdefault.jpg)](https://youtube.com/shorts/AgN6dsDecCM)
+
+<!-- <video width="480" height="480" controls>
   <source src="figs/rKL_MNIST.mp4" type="video/mp4">
-</video>
+</video> -->
