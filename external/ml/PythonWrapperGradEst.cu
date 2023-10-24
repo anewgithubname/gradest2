@@ -9,6 +9,26 @@
 #include "../ml/gradest_sm.cuh"
 #include "../ml/gradest_fdiv.cuh"
 
+template <class T>
+inline Matrix<T> KLFcon(Matrix<T>&& m) {
+    return std::move(exp(m - 1));
+}
+
+template <class T>
+inline Matrix<T> dKLFcon(Matrix<T>&& m) {
+    return std::move(exp(m - 1));
+}
+
+template <class T>
+inline Matrix<T> Chi2Fcon(Matrix<T>&& m) {
+    return std::move(square(m)/2 + m);
+}
+
+template <class T>
+inline Matrix<T> dChi2Fcon(Matrix<T>&& m) {
+    return std::move(m+1);
+}
+
 extern "C" {
 #ifdef _WIN64
 __declspec(dllexport) void __cdecl info() {
@@ -72,14 +92,7 @@ void GF_ULSIF(float *xp, float *xq, float *x, int np, int nq, int n,
         memcpy((float *)X.data(), x, sizeof(float) * n * d);
 #endif
 
-        auto [grad, sigma] = infer_fdiv(Xp, Xq, X,
-            [](CM&& m) {
-                return std::move(square(m)/2 + m);
-            },
-            [](CM&& m) {
-                return std::move(m+1);
-            },
-            sigma_chosen, lambda_chosen, maxiter);
+        auto [grad, sigma] = infer_fdiv(Xp, Xq, X, Chi2Fcon, dChi2Fcon, sigma_chosen, lambda_chosen, maxiter);
 
 #ifndef CPU_ONLY
         CuBLASErrorCheck(cublasDestroy(Matrix<CUDAfloat>::global_handle));
@@ -139,14 +152,7 @@ void GF_KL(float *xp, float *xq, float *x, int np, int nq, int n,
         memcpy((float *)X.data(), x, sizeof(float) * n * d);
 #endif
 
-        auto [grad, sigma] = infer_fdiv(Xp, Xq, X,
-            [](CM&& m) {
-                return std::move(exp(m -1));
-            },
-            [](CM&& m) {
-                return std::move(exp(m - 1));
-            },
-            sigma_chosen, lambda_chosen, maxiter);
+        auto [grad, sigma] = infer_fdiv(Xp, Xq, X, KLFcon, dKLFcon, sigma_chosen, lambda_chosen, maxiter);
 
 #ifndef CPU_ONLY
         CuBLASErrorCheck(cublasDestroy(Matrix<CUDAfloat>::global_handle));

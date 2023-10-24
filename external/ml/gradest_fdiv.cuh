@@ -12,7 +12,7 @@ struct result {Matrix<T> grad; float sigma;};
 
 template <class T>
 Matrix<T> update_fdiv(const Matrix<T> &Xp, const Matrix<T> &Xq, const Matrix<T> &X, 
-                    auto dfun_con, float sigma = 1, float lambda = 0.0f, int maxiter = 2000) {
+                    Matrix<T> (*dfun_con)(Matrix<T> &&), float sigma = 1, float lambda = 0.0f, int maxiter = 2000) {
 
     int np = Xp.num_row();
     int nq = Xq.num_row();
@@ -60,7 +60,7 @@ Matrix<T> update_fdiv(const Matrix<T> &Xp, const Matrix<T> &Xq, const Matrix<T> 
 
 template <class T>
 struct result<T> infer_fdiv(const Matrix<T> &Xp, const Matrix<T> &Xq, const Matrix<T> &X, 
-                          auto Fcon, auto DFcon,
+                           Matrix<T> (*Fcon)(Matrix<T> &&), Matrix<T> (*DFcon)(Matrix<T> &&),
                           float sigma_chosen, float lambda_chosen = 0.0f, int maxiter = 2000){
 
 

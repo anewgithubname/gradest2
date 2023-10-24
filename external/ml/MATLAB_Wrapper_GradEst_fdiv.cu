@@ -10,6 +10,26 @@
 #include "../cpp/juzhen.hpp" 
 #include "../ml/gradest_fdiv.cuh"
 
+template <class T>
+inline Matrix<T> KLFcon(Matrix<T>&& m) {
+    return std::move(exp(m - 1));
+}
+
+template <class T>
+inline Matrix<T> dKLFcon(Matrix<T>&& m) {
+    return std::move(exp(m - 1));
+}
+
+template <class T>
+inline Matrix<T> Chi2Fcon(Matrix<T>&& m) {
+    return std::move(square(m)/2 + m);
+}
+
+template <class T>
+inline Matrix<T> dChi2Fcon(Matrix<T>&& m) {
+    return std::move(m+1);
+}
+
 /* Input Arguments */
 
 #define XP_IN prhs[0] 
@@ -17,6 +37,7 @@
 #define XT_IN prhs[2]
 #define SIGMA_CHOSEN prhs[3]
 #define LAMBDA_CHOSEN prhs[4]
+#define MAX_ITER prhs[5]
 
 /* Output Arguments */
 #define GRAD_OUT plhs[0]
@@ -34,11 +55,12 @@ void mexFunction(int nlhs, mxArray *plhs[],
     std::cout << "num of output: " << nlhs << std::endl;
 #endif
 
-    size_t d, np, nq, nt;
+    size_t d, np, nq, nt, maxiter;
     np = mxGetM(XP_IN);
     d = mxGetN(XP_IN);    
     nq = mxGetM(XQ_IN);
     nt = mxGetM(XT_IN);
+    maxiter = mxGetScalar(MAX_ITER);
 
     float sigma_chosen = mxGetScalar(SIGMA_CHOSEN);
     float lambda_chosen = mxGetScalar(LAMBDA_CHOSEN);
@@ -48,6 +70,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     std::cout << "np: " << np << std::endl;
     std::cout << "nq: " << nq << " nt: " << nt << std::endl;
     std::cout << "sigma: " << sigma_chosen << " lambda: " << lambda_chosen << std::endl;
+    std::cout << "maxiter: " << maxiter << std::endl;
 #endif
 
     {
@@ -63,8 +86,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
         CM X("Xt", nt, d);
         cudaMemcpy((float *) X.data(), mxGetPr(XT_IN), sizeof(float)*nt*d, cudaMemcpyHostToDevice);
 
-        // // auto ret = do_GF(Xp, Xpt, Xq, Xqt, step_size, start, end, maxiteration);
-        auto ret = infer_KL(Xp, Xq, X, sigma_chosen, lambda_chosen);
+        auto ret = infer_fdiv(Xp, Xq, X, KLFcon, dKLFcon, sigma_chosen, lambda_chosen, maxiter);
     
         GRAD_OUT = mxCreateNumericMatrix(nt, d+1, mxSINGLE_CLASS, mxREAL);
         cudaMemcpy(mxGetPr(GRAD_OUT), (float *) ret.grad.data(), sizeof(float)*nt*(d+1), cudaMemcpyDeviceToHost);
