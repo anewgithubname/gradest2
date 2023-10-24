@@ -13,6 +13,7 @@ Before running the python scripts, please
 compile CUDA code by running. 
 ```bash
 cd external
+chmod +x ./make.sh
 ./make.sh
 ```
 
