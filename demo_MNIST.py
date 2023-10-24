@@ -6,6 +6,8 @@ from numpy import *
 from core.gradest import version, infer_KL, infer_ULSIF
 from core.util import comp_dist, comp_median
 
+import os
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # %%
@@ -98,7 +100,15 @@ for i in range(49):
 
 base = "./"
 flowtype = "forwardKL" if forwardKLflow else "reverseKL"
-plt.savefig(base + f"./figs/mnist/{flowtype}/gradest_0.png")
+
+# Define the directory path
+directory_path = base + f"figs/mnist/{flowtype}"
+
+# Check if the directory exists, and if not, create it
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+
+plt.savefig(base + f"figs/mnist/{flowtype}/gradest_0.png")
 
 # %%
 seq = 1
