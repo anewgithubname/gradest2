@@ -1,3 +1,28 @@
+/**
+ * @file cutil.cuh
+ * @brief Miscellaneous utility functions for Machine Learning
+ * @author Song Liu (song.liu@bristol.ac.uk)
+ *
+ * This file contains all essential matrix operations.
+ * Whatever you do, please keep it as simple as possible.
+ *
+    Copyright (C) 2023 Song Liu (song.liu@bristol.ac.uk)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+ */
+
 #pragma once
 
 #include "../cpp/juzhen.hpp"
@@ -47,6 +72,16 @@ Matrix<T> kernel_gau(Matrix<T> &&b, float sigma) {
 }
 
 template <class T>
+Matrix<T> relu(Matrix<T> &&M) {
+    return elemwise([=] __GPU_CPU__(float x) { return x > 0.0 ? x : 0.0; }, M);
+}
+
+template <class T>
+Matrix<T> d_relu(Matrix<T> &&M) {
+    return elemwise([=] __GPU_CPU__(float x) { return x > 0.0 ? 1.0 : 0.0; }, M);
+}
+
+template <class T>
 inline int argmin(std::vector<T> a) {
     // replace all nan with inf
     std::replace_if(a.begin(), a.end(), [](T x) { return std::isnan(x); },
@@ -84,6 +119,11 @@ struct adam_state{
         m = Matrix<T>::zeros(theta.num_row(), theta.num_col());
         v = Matrix<T>::zeros(theta.num_row(), theta.num_col());
     }
+    adam_state(double alpha, size_t nrow, size_t ncol)
+        :iteration(1), alpha(alpha), beta1(0.9), beta2(0.999), eps(1e-8){
+        m = Matrix<T>::zeros(nrow, ncol);
+        v = Matrix<T>::zeros(nrow, ncol);
+    }
 };
 
 template <class T>
@@ -101,4 +141,27 @@ Matrix<T> adam_update(Matrix<T> &&g, adam_state<T> &state){
     g = alpha * m_hat / (sqrtM(v_hat) + eps);
     iteration++;
     return std::move(g);
+}
+
+template <class T>
+Matrix<T> predict_one_hot(const Matrix<T>& input){
+    //finding the maximum of input for each column
+    auto colmax = reduce(
+
+        [] __GPU_CPU__(float *v, float *vdes, int lenv, int lendes){
+            double max = - DBL_MAX;
+            for(int i = 0; i < lenv; i++){
+                if(v[i] > max){
+                    max = v[i];
+                }
+            }
+            vdes[0] = max;
+        },
+        
+        input, 0, 1);
+
+    //substraction of the maximum from each column
+    auto sub = input - Matrix<T>::ones(input.num_row(), 1) * colmax;
+    //converting it to zero one matrix
+    return elemwise([] __GPU_CPU__ (float x){return x > -1e-5 ? 1 : 0;}, std::move(sub));
 }
