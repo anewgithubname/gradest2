@@ -1,3 +1,28 @@
+/**
+ * @file core.hpp
+ * @brief Core Components
+ * @author Song Liu (song.liu@bristol.ac.uk)
+ *
+ * This file contains all essential matrix operations.
+ * Whatever you do, please keep it as simple as possible.
+ *
+    Copyright (C) 2021 Song Liu (song.liu@bristol.ac.uk)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+ */
+
 #ifndef CORE_HPP
 #define CORE_HPP
 
@@ -100,7 +125,6 @@ class Matrix {
     inline int get_transpose() const { return transpose; }
     std::string get_name() const { return name; }
     const D *data() const { return elements.get(); }
-    const std::shared_ptr<D[]> get_shared_ptr() const { return elements; }
 
     // Matrix Fillers
     void zeros() { memset(elements.get(), 0, sizeof(D) * numrow * numcol); }
@@ -121,7 +145,7 @@ class Matrix {
 
     Matrix<D> inv();  // using LU decomposition
     D norm() const;   // using single for loop
-    const Matrix<D> T() const;
+    Matrix<D> T() const;
 
     // Matrix slicers
     Matrix<D> columns(size_t start, size_t end) const;
@@ -197,9 +221,13 @@ class Matrix {
     friend Matrix<Data> hadmd(const Matrix<Data> &M1, const Matrix<Data> &M2);
 
     template <class Data>
+    friend void read(FILE *f, Matrix<Data> &M);
+    template <class Data>
     friend Matrix<Data> read(std::string filename);
     template <class Data>
     friend void write(std::string filename, const Matrix<Data> &M);
+    template <class Data>
+    friend void write(FILE *f, const Matrix<Data> &M);
 
     friend class Memory<D>;
     friend class Matrix<CUDAfloat>;
@@ -308,7 +336,7 @@ D Matrix<D>::norm() const {
 }
 //"fake" matrix transposition. It does not copy the data.
 template <class D>
-const Matrix<D> Matrix<D>::T() const {
+Matrix<D> Matrix<D>::T() const {
     std::string newname = name + "_T";
     Matrix<D> MT(newname.c_str(), numrow, numcol, !transpose, elements);
     return MT;
@@ -522,6 +550,16 @@ Matrix<D> Matrix<D>::eleminv(double l) const {
     return M;
 }
 
+template <class D>
+void read(FILE *f, Matrix<D> &M){
+    // read int variables to the file.
+    size_t numrow = getw(f);
+    size_t numcol = getw(f);
+    size_t transpose = getw(f);
+
+    int bytesread = fread(M.elements.get(), sizeof(D), numcol * numrow, f);
+}
+
 /*
  * Read Matrix from a File
  *
@@ -543,6 +581,15 @@ Matrix<D> read(std::string filename) {
 }
 
 template <class D>
+void write(FILE *f, const Matrix<D> &M) {
+    // write int variables to the file.
+    putw(M.numrow, f);
+    putw(M.numcol, f);
+    putw(M.transpose, f);
+    fwrite(M.elements.get(), sizeof(CUDAfloat), M.numcol * M.numrow, f);
+}
+
+template <class D>
 /*
     Write matrix M to file
     M: the matrix to be written
@@ -552,10 +599,7 @@ void write(std::string filename, const Matrix<D> &M) {
     FILE *f = fopen(filename.c_str(), "wb");
     // write int variables to the file.
 
-    putw(M.numrow, f);
-    putw(M.numcol, f);
-    putw(M.transpose, f);
-    fwrite(M.elements.get(), sizeof(D), M.numcol * M.numrow, f);
+    write(f, M);
 
     fclose(f);
 }

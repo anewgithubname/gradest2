@@ -74,10 +74,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
 #endif
 
     {
-        CuBLASErrorCheck(cublasCreate(&Matrix<CUDAfloat>::global_handle));
         Memory<int> mdi;
         Memory<float> md;
+#ifndef CPU_ONLY
         Memory<CUDAfloat> gpumd;
+        CuBLASErrorCheck(cublasCreate(&Matrix<CUDAfloat>::global_handle));
     
         CM Xp("Xp", np, d);
         cudaMemcpy((float *) Xp.data(), mxGetPr(XP_IN), sizeof(float)*np*d, cudaMemcpyHostToDevice);
@@ -85,16 +86,32 @@ void mexFunction(int nlhs, mxArray *plhs[],
         cudaMemcpy((float *) Xq.data(), mxGetPr(XQ_IN), sizeof(float)*nq*d, cudaMemcpyHostToDevice);
         CM X("Xt", nt, d);
         cudaMemcpy((float *) X.data(), mxGetPr(XT_IN), sizeof(float)*nt*d, cudaMemcpyHostToDevice);
+#else
+        M Xp("Xp", np, d);
+        memcpy(Xp.data(), mxGetPr(XP_IN), sizeof(float)*np*d);
+        M Xq("Xq", nq, d);
+        memcpy(Xq.data(), mxGetPr(XQ_IN), sizeof(float)*nq*d);
+        M X("Xt", nt, d);
+        memcpy(X.data(), mxGetPr(XT_IN), sizeof(float)*nt*d);
+#endif
 
         auto ret = infer_fdiv(Xp, Xq, X, KLFcon, dKLFcon, sigma_chosen, lambda_chosen, maxiter);
     
         GRAD_OUT = mxCreateNumericMatrix(nt, d+1, mxSINGLE_CLASS, mxREAL);
+        
+#ifndef CPU_ONLY
         cudaMemcpy(mxGetPr(GRAD_OUT), (float *) ret.grad.data(), sizeof(float)*nt*(d+1), cudaMemcpyDeviceToHost);
+#else
+        memcpy(mxGetPr(GRAD_OUT), ret.grad.data(), sizeof(float)*nt*(d+1));
+#endif
+
         std::cout << ret.sigma << std::endl;
         SIGMA_OUT = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);
         float *psigmaOut = (float *) mxGetPr(SIGMA_OUT);
         *psigmaOut = ret.sigma;
-
+        
+#ifndef CPU_ONLY
         CuBLASErrorCheck(cublasDestroy(Matrix<CUDAfloat>::global_handle));
+#endif
     }
 }

@@ -7,7 +7,7 @@ addpath("external/matlab");
 nq = 5000;
 
 % perform subspace WGF?
-findsubspace = false
+findsubspace = true
 
 if findsubspace
     U = orth(randn(5,2));

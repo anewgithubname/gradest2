@@ -1,15 +1,33 @@
+/**
+ * @file helper.h
+ * @brief declerations of some helper functions. 
+ * @author Song Liu (song.liu@bristol.ac.uk)
+ * 
+    Copyright (C) 2021 Song Liu (song.liu@bristol.ac.uk)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 
 #ifndef HELPER_HPP
 #define HELPER_HPP
-
-// #include <fmt/format.h>
 
 #ifndef LOGGING_OFF
 #ifndef SPDLOG_COMPILED_LIB
 #define SPDLOG_COMPILED_LIB
 #endif
 #include <spdlog/spdlog.h>
-#include "spdlog/sinks/stdout_sinks.h"
+#include <spdlog/sinks/stdout_sinks.h>
 #endif
 #include <chrono>
 typedef std::chrono::high_resolution_clock Clock;
@@ -57,10 +75,6 @@ inline idxlist shuffle(int start, int end){
 
 inline idxlist shuffle(int end){
     return shuffle(0, end);
-}
-
-inline int rand_number(){
-    return rand() % 10;
 }
 
 inline double time_in_ms(Clock::time_point start, Clock::time_point end) {

@@ -1,4 +1,23 @@
+/**
+ * @file cukernels.cu
+ * @brief cuda kernels and some kenernel dependent functions
+ * @author Song Liu (song.liu@bristol.ac.uk)
+ *
+    Copyright (C) 2021 Song Liu (song.liu@bristol.ac.uk)
 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 #include "cumatrix.cuh"
 using namespace std;
 
@@ -265,7 +284,7 @@ Matrix<CUDAfloat> hstack(vector<MatrixView<CUDAfloat>> matrices) {
                 num_row, matrices[i].num_col(), &alpha,
                 (float *)matrices[i].data(), matrices[i].num_col(), &beta,
                 (float *)&result.elements.get()[col_index * num_row], num_row,
-                (float *)&result.elements.get()[col_index * num_row], num_row));
+                (float *)&result.elements.get()[col_index * num_row], num_row))
         }
         col_index += matrices[i].num_col();
     }
@@ -297,7 +316,7 @@ Matrix<CUDAfloat> hadmd(const Matrix<CUDAfloat> &M1,
                                  M1.numcol, &s1, (float *)M2.elements.get(),
                                  M2.numrow, &s2, (float *)result.elements.get(),
                                  result.numrow, (float *)result.elements.get(),
-                                 result.numrow));
+                                 result.numrow))
 
     size_t numElem = M1.numrow * M1.numcol;
     productKernel<<<cudaConfig(numElem)>>>((float *)result.elements.get(),
@@ -343,4 +362,18 @@ Matrix<CUDAfloat> hadmd(Matrix<CUDAfloat> &&M1, const Matrix<CUDAfloat> &M2) {
 
 Matrix<CUDAfloat> hadmd(Matrix<CUDAfloat> &&M1, Matrix<CUDAfloat> &&M2) {
     return hadmd(M1, std::move(M2));
+}
+
+template <>
+void write(FILE *fp, const Matrix<CUDAfloat>& M) {
+    write(fp, M.to_host());
+}
+
+template <>
+void read(FILE *fp, Matrix<CUDAfloat>& M) {
+    Matrix<float> tmp("tmp", M.num_row(), M.num_col());
+    read(fp, tmp);
+
+    M.numrow = tmp.numrow; M.numcol = tmp.numcol; M.transpose = tmp.transpose;
+    cudaMemcpy(M.elements.get(), tmp.elements.get(), tmp.num_row() * tmp.num_col() * sizeof(float), cudaMemcpyHostToDevice);
 }

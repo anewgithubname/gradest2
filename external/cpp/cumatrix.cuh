@@ -1,3 +1,24 @@
+/**
+ * @file cumatrix.hpp
+ * @brief header or the cuda-powered matrix class.
+ * @author Song Liu (song.liu@bristol.ac.uk)
+ *
+    Copyright (C) 2022 Song Liu (song.liu@bristol.ac.uk)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #ifndef CUMATRIX_HPP
 #define CUMATRIX_HPP
 
@@ -128,9 +149,6 @@ class Matrix<CUDAfloat> {
     inline size_t get_transpose() const { return transpose; }
     std::string get_name() const { return name; }
     const CUDAfloat* data() const { return elements.get(); }
-    const std::shared_ptr<CUDAfloat[]> get_shared_ptr() const {
-        return elements;
-    }
 
     // matrix filler
     void ones();
@@ -157,7 +175,7 @@ class Matrix<CUDAfloat> {
     Matrix<CUDAfloat> eleminv(double l) const;
 
     float norm() const;
-    const Matrix<CUDAfloat> T() const;
+    Matrix<CUDAfloat> T() const;
 
     // upload to host mem
     Matrix<float> to_host() const;
@@ -252,7 +270,9 @@ class Matrix<CUDAfloat> {
     friend Matrix<CUDAfloat> hadmd(const Matrix<CUDAfloat>& M1,
                                    Matrix<CUDAfloat>&& M2);
     friend Matrix<CUDAfloat> hadmd(Matrix<CUDAfloat>&& M1,
-                                   const Matrix<CUDAfloat>& M2);
+                                  const Matrix<CUDAfloat>& M2);
+    
+    friend void read<CUDAfloat>(FILE *fp, Matrix<CUDAfloat>& M);
 };
 
 struct GPUSampler {
@@ -418,5 +438,13 @@ Matrix<CUDAfloat>& fill(Matrix<CUDAfloat>& M, double a);
 void copy(Matrix<CUDAfloat>& dest, const Matrix<CUDAfloat>& src);
 Matrix<CUDAfloat> hstack(std::vector<MatrixView<CUDAfloat>> matrices);
 const Matrix<CUDAfloat> vstack(std::vector<MatrixView<CUDAfloat>> matrices);
+
+// specialization, as they will be called by 
+// fun(Matrix<D> M) where D is a template parameter
+
+template <>
+void write(FILE *fp, const Matrix<CUDAfloat>& M);
+template <>
+void read(FILE *fp, Matrix<CUDAfloat>& M);
 
 #endif
