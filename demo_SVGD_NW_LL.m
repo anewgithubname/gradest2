@@ -2,7 +2,7 @@
 
 clear
 addpath("utils");
-addpath("Stein-Variational-Gradient-Descent\matlab");
+addpath("svgd\matlab");
 
 %%
 % Problem set up. 
